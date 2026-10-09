@@ -1,5 +1,6 @@
 import csv
 from pprint import pprint
+import time
 
 SUDOKU_PUZZLE_FOLDER = "sudoku_puzzles"
 DOMAIN = [1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -63,22 +64,30 @@ def get_next_unassigned(puzzle):
                 return i, j
     return None
 
-def plain_backtrack(puzzle):
+def plain_backtrack(puzzle, backtrack_count=0, search_step=0):
     if is_complete(puzzle):
-        return puzzle
+        return puzzle, backtrack_count, search_step
 
     var_row, var_col = get_next_unassigned(puzzle)
     for possible_value in DOMAIN:
+        search_step += 1
         puzzle[var_row][var_col] = possible_value
 
         if check_constraints(puzzle):
-            results = plain_backtrack(puzzle)
-            if results != None:
+            results = plain_backtrack(puzzle, backtrack_count+1, search_step)
+            if results[0] != None:
                 return results
-        
+            _, backtrack_count, search_step = results
+
         puzzle[var_row][var_col] = 0
 
 
-    return None
+    return None, backtrack_count, search_step
 
-pprint(plain_backtrack(load_puzzle_csv("easy.csv")))
+start_time = time.perf_counter()
+
+# Call your function
+s = plain_backtrack(load_puzzle_csv("easy.csv"))
+
+end_time = time.perf_counter()
+print(f"Elapsed time: {end_time - start_time} seconds")
