@@ -12,42 +12,35 @@ def load_puzzle_csv(filename):
         puzzle = [[int(cell) for cell in row] for row in reader]
     return puzzle
 
-# cehcks that every element in a list is unique, ignores zeros.
+# checks that every element in a list is unique, ignores zeros.
 def has_unique_non_zeros(l):
     l_no_zeros = [i for i in l if i != 0]
     return len(l_no_zeros) == len(set(l_no_zeros))
 
 # groups each 3x3 square into its own list.
-def get_3x3s(puzzle):
-    squares = []
+def get_3x3(puzzle, row, col):
+    square_row = (row // 3) * 3
+    square_col = (col // 3) * 3
 
-    for square_row in range(3):
-        for square_col in range(3):
-            square = []
-            
-            for row in range(square_row * 3, square_row * 3 + 3):
-                for col in range(square_col * 3, square_col * 3 + 3):
-                    square.append(puzzle[row][col])
-                    
-            squares.append(square)
-    return squares
+    square = []
+    for i in range(3):
+        for j in range(3):
+            square.append(puzzle[square_row + i][square_col + j])
+
+    return square
+
 
 # TODO: change this to only check a specfic value. 
-def check_constraints(puzzle):
-    for row in puzzle:
-        if not has_unique_non_zeros(row):
-            return False
+def check_constraints(puzzle, row, col):
+    if not has_unique_non_zeros(puzzle[row]):
+        return False
 
-    transposed = [list(row) for row in zip(*puzzle)]
-    for col in transposed:
-        if not has_unique_non_zeros(col):
-            return False
+    if not has_unique_non_zeros([i[col] for i in puzzle]):
+        return False
 
-    squares = get_3x3s(puzzle)
-    for sq in squares:
-        if not has_unique_non_zeros(sq):
-            return False
-
+    square = get_3x3(puzzle, row, col)
+    if not has_unique_non_zeros(square):
+        return False
     return True
 
 def is_complete(puzzle):
@@ -73,7 +66,7 @@ def plain_backtrack(puzzle, backtrack_count=0, search_step=0):
         search_step += 1
         puzzle[var_row][var_col] = possible_value
 
-        if check_constraints(puzzle):
+        if check_constraints(puzzle, var_row, var_col):
             results = plain_backtrack(puzzle, backtrack_count+1, search_step)
             if results[0] != None:
                 return results
@@ -87,7 +80,8 @@ def plain_backtrack(puzzle, backtrack_count=0, search_step=0):
 start_time = time.perf_counter()
 
 # Call your function
-s = plain_backtrack(load_puzzle_csv("easy.csv"))
+s = plain_backtrack(load_puzzle_csv("hard.csv"))
 
 end_time = time.perf_counter()
+print(s)
 print(f"Elapsed time: {end_time - start_time} seconds")
