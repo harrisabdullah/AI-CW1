@@ -57,31 +57,32 @@ def get_next_unassigned(puzzle):
                 return i, j
     return None
 
-def plain_backtrack(puzzle, backtrack_count=0, search_step=0):
+def plain_backtrack(puzzle, measures):
     if is_complete(puzzle):
-        return puzzle, backtrack_count, search_step
+        return puzzle
 
     var_row, var_col = get_next_unassigned(puzzle)
     for possible_value in DOMAIN:
-        search_step += 1
+        measures['search_step'] += 1
         puzzle[var_row][var_col] = possible_value
 
         if check_constraints(puzzle, var_row, var_col):
-            results = plain_backtrack(puzzle, backtrack_count+1, search_step)
-            if results[0] != None:
-                return results
-            _, backtrack_count, search_step = results
+            measures['backtrack_count'] += 1
+            solution = plain_backtrack(puzzle, measures)
+            if solution is not None:
+                return solution
 
         puzzle[var_row][var_col] = 0
 
-
-    return None, backtrack_count, search_step
+    return None
 
 start_time = time.perf_counter()
 
 # Call your function
-s = plain_backtrack(load_puzzle_csv("hard.csv"))
+stats = {'search_step': 0, 'backtrack_count': 0}
+s = plain_backtrack(load_puzzle_csv("hard.csv"), stats)
+pprint(stats)
 
 end_time = time.perf_counter()
-print(s)
+pprint(s)
 print(f"Elapsed time: {end_time - start_time} seconds")
