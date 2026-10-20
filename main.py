@@ -1,6 +1,7 @@
 import csv
 from pprint import pprint
 import time
+import math
 
 SUDOKU_PUZZLE_FOLDER = "sudoku_puzzles"
 DOMAIN = [1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -30,7 +31,6 @@ def get_3x3(puzzle, row, col):
     return square
 
 
-# TODO: change this to only check a specfic value. 
 def check_constraints(puzzle, row, col):
     if not has_unique_non_zeros(puzzle[row]):
         return False
@@ -67,18 +67,20 @@ def plain_backtrack(puzzle, measures):
         puzzle[var_row][var_col] = possible_value
 
         if check_constraints(puzzle, var_row, var_col):
-            measures['backtrack_count'] += 1
             solution = plain_backtrack(puzzle, measures)
             if solution is not None:
                 return solution
 
         puzzle[var_row][var_col] = 0
 
+    measures['backtrack_count'] += 1
     return None
+
+
+
 
 start_time = time.perf_counter()
 
-# Call your function
 stats = {'search_step': 0, 'backtrack_count': 0}
 s = plain_backtrack(load_puzzle_csv("hard.csv"), stats)
 pprint(stats)
@@ -86,3 +88,4 @@ pprint(stats)
 end_time = time.perf_counter()
 pprint(s)
 print(f"Elapsed time: {end_time - start_time} seconds")
+
