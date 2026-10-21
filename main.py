@@ -76,9 +76,6 @@ def plain_backtrack(puzzle, measures):
     measures['backtrack_count'] += 1
     return None
 
-
-
-
 start_time = time.perf_counter()
 
 stats = {'search_step': 0, 'backtrack_count': 0}
