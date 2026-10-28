@@ -5,14 +5,8 @@
     ; Types
     ; -------------------------------
 
-    ; EXAMPLE
-
-    ; (:types
-    ;     parent_type
-    ;     child_type - parent_type
-
-    ; )
     (:types
+    ;objects
        lander - objects
        waypoint - objects
        rover - objects
@@ -22,27 +16,27 @@
     ; Predicates
     ; -------------------------------
 
-    ; EXAMPLE
-
-    ; (:predicates
-    ;     (no_arity_predicate)
-    ;     (one_arity_predicate ?p - parameter_type)
-    ; )
-
     (:predicates
+        ;waypoint connectivity
         (connected ?w1 - waypoint ?w2 - waypoint)
         (at_lander ?l - lander ?w - waypoint)
         (at_rover ?r - rover ?w - waypoint)
+
+        ;rover deployment status
         (deployed ?r - rover)
         (undeployed ?r - rover)
+
+        ;assignment
         (assigned ?r - rover ?l - lander)
 
+        ;Image/Scan conditions
         (has_image ?r - rover ?w - waypoint)
         (has_image_lander ?l - lander ?w - waypoint)
         (has_scan ?r - rover ?w - waypoint)
         (has_scan_lander ?l - lander ?w - waypoint)
         (has_storage ?r - rover)
 
+        ;Sample condition
         (has_sample_storage ?r - rover)
         (has_sample ?r - rover ?w - waypoint)
         (has_sample_lander ?l - lander ?w - waypoint)
@@ -54,20 +48,7 @@
     ; Actions
     ; -------------------------------
 
-    ; EXAMPLE
-
-    ; (:action action-template
-    ;     :parameters (?p - parameter_type)
-    ;     :precondition (and
-    ;         (one_arity_predicate ?p)
-    ;     )
-    ;     :effect 
-    ;     (and 
-    ;         (no_arity_predicate)
-    ;         (not (one_arity_predicate ?p))
-    ;     )
-    ; )
-
+    ;To deploy a rover and at a certain waypoint
     (:action deploy
         :parameters (?r - rover ?l - lander ?w - waypoint)
         :precondition (and
@@ -81,6 +62,7 @@
         (at_rover ?r ?w)
         ) 
     )
+    ;To move a rover from one waypoint to another
     (:action Move
         :parameters (?r - rover ?w1 - waypoint ?w2 - waypoint)
         :precondition (and
@@ -92,6 +74,7 @@
         (not (at_rover ?r ?w1)))
         
     )    
+    ;To fill storage with an image
     (:action Capture_image
         :parameters (?r - rover ?w - waypoint)
         :precondition (and
@@ -103,7 +86,7 @@
         (not(has_storage ?r))
         (has_image ?r ?w))        
     )  
-
+    ;To fill storage with a scan
     (:action Capture_scan
         :parameters (?r - rover ?w - waypoint)
         :precondition (and
@@ -115,7 +98,7 @@
         (not(has_storage ?r))
         (has_scan ?r ?w))        
     )
-
+    ;To empty storage of an image
     (:action Transmit_image
         :parameters (?r - rover ?l - lander ?w - waypoint)
         :precondition (and
@@ -127,7 +110,7 @@
         (has_image_lander ?l ?w))
         
     )    
-
+    ;To empty storage of a scan
     (:action Transmit_scan
         :parameters (?r - rover ?l - lander ?w - waypoint)
         :precondition (and
@@ -139,6 +122,7 @@
         (has_scan_lander ?l ?w))
         
     ) 
+    ;To fill sample storage
     (:action Collect_sample
         :parameters (?r - rover ?w - waypoint)
         :precondition (and
@@ -150,6 +134,7 @@
         (has_sample ?r ?w))
         
     )    
+    ;To empty sample storage
     (:action Return_sample
         :parameters (?r - rover ?l - lander ?w - waypoint ?w_sample - waypoint)
         :precondition (and

@@ -2,6 +2,7 @@
     (:domain lunar-extented)
 
     (:objects
+    ;object naming
         lander1 lander2 - lander
         rover1 rover2 - rover
         wp1 wp2 wp3 wp4 wp5 wp6 - waypoint
@@ -9,6 +10,7 @@
     )
 
     (:init
+        ;setup
         (assigned_astronaught lander1 Alice)
         (assigned_astronaught lander2 Bob)
         (in_loading_bay Alice lander1)
@@ -25,6 +27,7 @@
         (assigned rover1 lander1)
         (assigned rover2 lander2)
 
+        ;connecting waypoints
         (connected wp1 wp2)
         (connected wp2 wp3)
         (connected wp3 wp5)
@@ -38,6 +41,7 @@
 
     (:goal
         (and
+            ;desired goals
             (has_image_lander lander1 wp3)
 
             (has_scan_lander lander2 wp4)
