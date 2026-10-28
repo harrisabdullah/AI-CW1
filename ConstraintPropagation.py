@@ -3,113 +3,108 @@ from pprint import pprint
 import time
 import sys
 
-# Limit traceback output for cleaner error messages
-sys.tracebacklimit = 2
-
 SUDOKU_PUZZLE_FOLDER = "sudoku_puzzles"
 BOARD_SIZE = 9
 
-# Loads a Sudoku puzzle from a CSV and returns a 9x9 2D list of integers.
+# loads a Sudoku puzzle from a CSV and returns a 9x9 2D list
 def load_puzzle_csv(filename):
     with open(f"{SUDOKU_PUZZLE_FOLDER}/{filename}", "r") as f:
         reader = csv.reader(f)
         puzzle = [[int(cell) for cell in row] for row in reader]
     return puzzle
 
-# Calculates the base-2 logarithm using bitwise right shifts.
-# Used to convert a binary flag (like 0b000010000) back to an integer (5).
+# calculates log base 2 using bit shifts
+# used to turn a bit flag back into an integer
 def log2(n):
     log_val = 0
+    # keep shifting right and counting until only the first 1 bit is left
     while n > 1:
         n >>= 1
         log_val += 1
     return log_val
 
-# Checks if a cell has exactly one possible value left.
-# In binary, a power of 2 has only one '1' bit. 
-# (n & (n - 1) == 0) is a quick bitwise trick to check if n is a power of 2.
+# checks if a cell has exactly one possible value left
+# a power of 2 only has one 1 bit so (n & (n - 1)) is 0 when n is a power of 2
 def is_resolved(cell):
     return cell > 0 and (cell & (cell - 1)) == 0
 
-# Applies a bitmask to a cell to remove a possibility.
-# If removing this possibility leaves only one valid number (resolves the cell),
-# it recursively updates other cells to reflect this new resolution.
+# removes possibilities from a cell using a bitmask
+# if this leaves the cell with only one number we have to update its neigbours
 def update_cell(bit_map, bit_mask, row, col):
+    # remove the possibilities that are in the mask
     new = bit_map[row][col] & bit_mask
     
-    # If the cell wasn't resolved before, but is resolved now, propagate the change
+    # if the cell wasn't resolved before but is now propogate the change
     if is_resolved(new) and not is_resolved(bit_map[row][col]):
         bit_map[row][col] = new
         update_bit_map(bit_map, row, col)
         
     bit_map[row][col] = new
 
-# Yields the (row, col) coordinates of all cells in the same 3x3 block.
+# yields the row and col of every cell in the same 3x3 square
 def get_square_index(row, col):
+    # determine the starting row and column index of the 3x3 grid
     square_row = (row // 3) * 3
     square_col = (col // 3) * 3
     for i in range(3):
         for j in range(3):
             yield square_row + i, square_col + j
 
-# When a cell is resolved, this function removes that cell's value from 
-# all other cells in the same row, column, and 3x3 square using a bitwise NOT (~).
+# when a cell is resolved remove its value from the row colum and 3x3 square around it
 def update_bit_map(bit_map, row, col):
+    # flip the bits so the resolved value is the one that gets removed
     bit_mask = ~bit_map[row][col]
 
-    # Update the rest of the row and column
+    # update the rest of the row and column
     for i in range(BOARD_SIZE):
         if i != col:
             update_cell(bit_map, bit_mask, row, i)
         if i != row:
             update_cell(bit_map, bit_mask, i, col)
 
-    # Update the rest of the 3x3 square
+    # update the rest of the 3x3 square
     for r, c in get_square_index(row, col):
+        # skip the cell itself
         if r == row and c == col:
             continue
         update_cell(bit_map, bit_mask, r, c)
 
-# Initializes a 9x9 grid where every cell is 0b111111111 (511 in decimal).
-# Each '1' bit represents a possible value from 1 to 9.
+# makes a 9x9 grid where every cell starts as 0b111111111
+# each 1 bit means that number (1-9) is still possible
 def generate_bit_map():
     return [[0b111111111 for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]
 
-# Helper function to print the grid in its raw binary format for debugging.
-def print_bit_map(bit_map):
-    for row in bit_map:
-        row_str = " ".join(f"{val:09b}" for val in row)
-        print(row_str)
-
-# Converts a standard integer Sudoku grid into a bitwise constraint grid.
-# Applies the initial puzzle numbers and cascades their constraints.
+# turns a normal Sudoku puzzle into a bit map and propagates the constraints from the starting numbers.
 def puzzle_to_bit_map(puzzle):
     bit_map = generate_bit_map()
 
     for i in range(BOARD_SIZE):
         for j in range(BOARD_SIZE):
+            # 0 means the cell is empty so skip it
             if puzzle[i][j] == 0:
                 continue
                 
-            # Convert integer (e.g., 3) to bit flag (0b000000100)
+            # turn the number into a bit flag
             bit_map[i][j] = 1 << (puzzle[i][j] - 1)
+            # remove that number from the cells around it
             update_bit_map(bit_map, i, j)
 
     return bit_map
 
-# Converts the resolved bitmask grid back into a standard integer grid.
-def bit_map_to_puzzle(bit_map):
+# turns the bit map back into a normal 9x9 puzzle
+def solved_bit_map_to_puzzle(bit_map):
     puzzle = [[0 for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]
     for r in range(BOARD_SIZE):
         for c in range(BOARD_SIZE):
+            # if any cell is not resolved there is no full solution
             if not is_resolved(bit_map[r][c]):
                 return None
             
-            # Convert bit flag back to integer (e.g., 0b000000100 -> 3)
+            # turn the bit flag back into a number
             puzzle[r][c] = log2(bit_map[r][c]) + 1
     return puzzle
 
-# Finds the first cell that has more than one possibility left.
+# gets the next cell that still has more than one possibility
 def get_next_unresolved(bit_map):
     for r in range(BOARD_SIZE):
         for c in range(BOARD_SIZE):
@@ -117,58 +112,59 @@ def get_next_unresolved(bit_map):
                 return r, c
     return None
 
-# Yields all possible integer values (1-9) still available in a cell's bitmask.
+# yields every number that is still possible in a cell
 def get_domain(cell):
     for i in range(BOARD_SIZE):
         if cell & (1 << i) != 0:
             yield i + 1
 
-# Recursively attempts to solve the puzzle by guessing valid options.
-# Uses constraint propagation (update_bit_map) to aggressively reduce the search space.
+# backtracking that uses constraint propagation
 def backtrack(bit_map, measures):
     unresolved = get_next_unresolved(bit_map)
     
-    # Base case: No unresolved cells left, puzzle is solved
+    # base case: if every cell is resolved we found the solution
     if unresolved is None:
         return bit_map
     
+    # get the coordinates of the next unresolved cell
     var_row, var_col = unresolved
     
-    # If a cell has 0b0, it means all possibilities were eliminated (dead end)
+    # if a cell has no possibilities left its a dead end
     if bit_map[var_row][var_col] == 0b0:
         measures['backtrack_count'] += 1
         return None
 
-    # Try every valid remaining number for this cell
+    # try every number that is still possible
     for possible_value in get_domain(bit_map[var_row][var_col]):
         measures['search_step'] += 1
         
-        # Deep copy the current bit map state so we can safely guess
+        # copy the bit map so we can make a guess without messing up the original
         temp = [row[:] for row in bit_map]
         
-        # Make the guess and propagate the constraints
+        # make a guess and propogate it to the other cells
         temp[var_row][var_col] = 1 << (possible_value - 1)
         update_bit_map(temp, var_row, var_col)
         
-        # Continue recursively
         solution = backtrack(temp, measures)
+        # if the recursive call found a solution return it
         if solution is not None:
             return solution
             
+    # if all numbers fail for this cell backtrack
     return None
 
-# Load and convert the puzzle to the bitmask representation
-puzzle = load_puzzle_csv("easy.csv")
-bit_map = puzzle_to_bit_map(puzzle)
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        sys.exit("Usage: python script.py <filename.csv>")
 
-start_time = time.perf_counter()
+    filename = sys.argv[1]
+    measures = {'search_step': 0, 'backtrack_count': 0}
+    
+    start_time = time.time()
 
-stats = {'search_step': 0, 'backtrack_count': 0}
-s = backtrack(bit_map, stats)
+    solved_bit_map = backtrack(puzzle_to_bit_map(load_puzzle_csv(filename)), measures)
 
-end_time = time.perf_counter()
+    pprint(solved_bit_map_to_puzzle(solved_bit_map) if solved_bit_map else "No solution found.")
 
-# Display results
-pprint(stats)
-pprint(bit_map_to_puzzle(s))
-print(f"Elapsed time: {end_time - start_time} seconds")
+    print(f"\nTime: {time.time() - start_time:.4f}s")
+    print(f"Steps: {measures['search_step']} | Backtracks: {measures['backtrack_count']}")
