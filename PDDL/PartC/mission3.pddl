@@ -26,6 +26,8 @@
         (has_storage rover2)
         (assigned rover1 lander1)
         (assigned rover2 lander2)
+        (has_sample_lander_storage lander1)
+        (has_sample_lander_storage lander2)
 
         ;connecting waypoints
         (connected wp1 wp2)

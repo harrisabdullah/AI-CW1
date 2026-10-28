@@ -29,6 +29,8 @@
         ;assignment
         (assigned ?r - rover ?l - lander)
 
+        
+
         ;Image/Scan conditions
         (has_image ?r - rover ?w - waypoint)
         (has_image_lander ?l - lander ?w - waypoint)
@@ -40,6 +42,9 @@
         (has_sample_storage ?r - rover)
         (has_sample ?r - rover ?w - waypoint)
         (has_sample_lander ?l - lander ?w - waypoint)
+        (has_sample_lander_storage ?l - lander)
+        
+        
 
     
     )
@@ -142,10 +147,12 @@
         (at_lander ?l ?w)
         (has_sample ?r ?w_sample)
         (deployed ?r)
-        (assigned ?r ?l))
+        (assigned ?r ?l)
+        (has_sample_lander_storage ?l))
         :effect (and
         (not(has_sample ?r ?w_sample))
         (has_sample_storage ?r)
+        (not(has_sample_lander_storage ?l))
         (has_sample_lander ?l ?w_sample))
         
     )    

@@ -41,6 +41,7 @@
         (has_sample_storage ?r - rover)
         (has_sample ?r - rover ?w - waypoint)
         (has_sample_lander ?l - lander ?w - waypoint)
+        (has_sample_lander_storage ?l - lander)
 
         ;astronaut assignment and room location
         (assigned_astronaught ?l - lander ?a - astronaut)

@@ -15,6 +15,7 @@
         (has_sample_storage rover1)
         (has_storage rover1)
         (at_lander lander1 wp2)
+        (has_sample_lander_storage lander1)
 
         ;connecting waypoints
         (connected wp1 wp2)
